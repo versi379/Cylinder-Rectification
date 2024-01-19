@@ -102,9 +102,6 @@ d3 = C2*II;
 d3 = d3/d3(3);
 d4 = C2*JJ;
 d4 = d4/d4(3);
-
-v1 = cross(d1,d3);
-v2 = cross(d2,d4);
 %% C1,C2 CENTRES
 
 
@@ -134,19 +131,54 @@ lInf = [0;0;1];
 vp = cross(a,lInf);
 vp = vp/vp(3);
 %% CALIBRATION MATRIX
-syms aa U0 V0 f;
-omega = [1 0 -U0; 0 1 -V0; -U0 -V0 (f^2+U0^2+V0^2)];
-eq1 = II.' * omega * II == 0;
-eq2 = v1.' * omega * v2 == 0;
-eq3 = JJ.' * omega * JJ ==0;
-S = solve ([eq1 eq2 eq3],[aa U0 V0 f]);
-f = double(S.f);
-U0 = double(S.U0);
-V0 = double(S.V0);
-f = abs(f(1));
-U0 = abs(U0(1));
-V0 = abs(V0(1));
-K = [f 0 U0; 0 f V0; 0 0 1];
+close all
+img = imread("../../img/PalazzoTe.jpg");
+img = imrotate(img,270);
+figure(1), imshow(img);
+hold on;
+%% pair of parallel lines to find vertical vanishing point vp1
+segment1 = drawline('Color','green');
+segment2 = drawline('Color','green');
+l1 = segToLine(segment1.Position);
+l1 = l1 / l1(3);
+l2 = segToLine(segment2.Position);
+l2 = l2 / l2(3);
+vp1 = cross(l1,l2);
+vp1 = vp1 / vp1(3);
+%% two pairs of parallel lines to find horizontal vanishing point vp2,vp3
+segment3 = drawline('Color','red');
+segment4 = drawline('Color','red');
+segment5 = drawline('Color','red');
+segment6 = drawline('Color','red');
+l3 = segToLine(segment3.Position);
+l3 = l3 / l3(3);
+l4 = segToLine(segment4.Position);
+l4 = l4 / l4(3);
+l5 = segToLine(segment5.Position);
+l5 = l5 / l5(3);
+l6 = segToLine(segment6.Position);
+l6 = l6 / l6(3);
+vp2 = cross(l3,l4);
+vp2 = vp2 / vp2(3);
+vp3 = cross(l5,l6);
+vp3 = vp3 / vp3(3);
+%% image of the line at the infinity orthogonal to the vertical vanishing points
+% in order to obtain two constraints for the calibration process
+inf_line = cross(vp2, vp3);
+inf_line = inf_line / inf_line(3);
+%%
+H = [eye(2), zeros(2,1); inf_line(:)'];
+%%
+IAC = get_IAC(inf_line, vp1, vp2, vp3, H);
+%% intrinsic parameters
+alfa = sqrt(IAC(1,1));
+u0 = -IAC(1,3)/(alfa^2);
+v0 = -IAC(2,3);
+fy = sqrt(IAC(3,3) - (alfa^2)*(u0^2) - (v0^2));
+fx = fy / alfa;
+%% build K using the parametrization
+K = [fx 0 u0; 0 fy v0; 0 0 1];
+disp(K);
 %% CYLINDER AXIS ORIENTATION W.R.T. CAMERA REFERENCE
 P = [K [0 0 0]'];
 pih = P.'*h;
