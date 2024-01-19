@@ -82,7 +82,7 @@ imDCCP = II*JJ' + JJ*II';
 imDCCP = imDCCP./norm(imDCCP);
 %% LINE AT INFINITY
 l_inf = null(imDCCP);
-%% 
+%% AFFINE RECTIFICATION MATRIX
 H = [eye(2), zeros(2,1); l_inf(:)'];
 %% 
 Q = inv(H)'*C1*inv(H);

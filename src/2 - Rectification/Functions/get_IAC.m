@@ -1,5 +1,5 @@
 function IAC = get_IAC(l_infs, vps, vp1s, vp2s, H)
-%GET_IAC Returns the Image of the absolute conitc
+%GET_IAC Returns the Image of the absolute conic
 %   l_infs set of imaged line at inf
 %   vps set of vanishing points to be used with l_infs
 %   vp1s set of vanishing points orthogonal to the point in the
