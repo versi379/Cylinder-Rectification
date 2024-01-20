@@ -166,9 +166,9 @@ vp3 = vp3 / vp3(3);
 % in order to obtain two constraints for the calibration process
 inf_line = cross(vp2, vp3);
 inf_line = inf_line / inf_line(3);
-%%
+%% affine rectification matrix
 H = [eye(2), zeros(2,1); inf_line(:)'];
-%%
+%% Image of Absolute Conic
 IAC = get_IAC(inf_line, vp1, vp2, vp3, H);
 %% intrinsic parameters
 alfa = sqrt(IAC(1,1));
@@ -194,5 +194,5 @@ radiusC2 = pdist([p3(1),p3(2);O2(1),O2(2)], 'euclidean');
 distance = pdist([O1(1),O1(2);O2(1),O2(2)], 'euclidean');
 
 % compute ratio
-ratio1 = radiusC1/distance;
-ratio2 = radiusC2/distance;
+ratio1 = radiusC1/distance; % 1.0991 (computed result)
+ratio2 = radiusC2/distance; % 1.5525 (computed result)

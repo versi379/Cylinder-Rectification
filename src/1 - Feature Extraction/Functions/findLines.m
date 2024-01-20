@@ -5,10 +5,10 @@ function lines = findLines(I)
     edges = edge(I, 'canny', [0.2 0.25]);
     
     % Hough Transform space
-    [H,T,R] = hough(edges, 'RhoResolution', 0.5, 'Theta', -90:0.5:89.5);
+    [H,T,R] = hough(edges);
     
     % Peaks in Hough Transform matrix
-    P = houghpeaks(H, 50, 'threshold', ceil(0.3*max(H(:))), 'NHoodSize', [97 37]);
+    P = houghpeaks(H, 100, 'threshold', 0.3*max(H(:)));
     
     % Extract line segments
     lines = houghlines(edges, T, R, P, 'FillGap', 200, 'MinLength', 500);

@@ -16,7 +16,7 @@ hold on
 for k = 1:length(lines) % for each line detected
     xy = [lines(k).point1; lines(k).point2];
     plot(xy(:,1), xy(:,2), 'LineWidth',1, 'Color','red');
-    text(lines(k).point1(1), lines(k).point1(2), int2str(k), 'FontSize',15, 'Color','white');
+    % text(lines(k).point1(1), lines(k).point1(2), int2str(k), 'FontSize',15, 'Color','white');
 end
 
 % save image with detected lines

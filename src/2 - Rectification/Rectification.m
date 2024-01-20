@@ -84,23 +84,23 @@ imDCCP = imDCCP./norm(imDCCP);
 l_inf = null(imDCCP);
 %% AFFINE RECTIFICATION MATRIX
 H = [eye(2), zeros(2,1); l_inf(:)'];
-%% 
+%% CONIC PROJECTIVE TRANSFORMATION
 Q = inv(H)'*C1*inv(H);
 Q = Q./Q(3,3);
-%%
+%% CONIC GEOMETRIC INFORMATION EXTRACTION
 par_geo = AtoG([Q(1,1),2*Q(1,2),Q(2,2),2*Q(1,3),2*Q(2,3),Q(3,3)]);
 center = par_geo(1:2);
 axes = par_geo(3:4);
-alpha = par_geo(5);
-%% 
 a = axes(1);
 b = axes(2);
+alpha = par_geo(5);
+%% ROTATION AND SCALING
 U = [cos(alpha), -sin(alpha); sin(alpha), cos(alpha)];
 S = diag([1, a/b]);
 K = U*S*U';
 A = [K zeros(2,1); zeros(1,2), 1];
 T = A*H;
-%% 
+%% COMPOSITION HOMOGRAPHY
 tform = projective2d(T');
 J = imwarp(img, tform);
 figure(2);
