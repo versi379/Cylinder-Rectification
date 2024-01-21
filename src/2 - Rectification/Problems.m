@@ -127,16 +127,17 @@ plot(x,y,'linewidth',2,'color','c')
 % save image
 saveas(1, '../../img/2 - Rectification/PalazzoTe_axis.png');
 %% AXIS IMAGE VANISHING POINT
-lInf = [0;0;1];
-vp = cross(a,lInf);
-vp = vp/vp(3);
+% lInf = [0;0;1];
+% vp = cross(a,lInf);
+% vp = vp/vp(3);
+vp = [a(2);-a(1);0]; % point at infinity along direction of axis
 %% CALIBRATION MATRIX
 close all
 img = imread("../../img/PalazzoTe.jpg");
 img = imrotate(img,270);
 figure(1), imshow(img);
 hold on;
-%% pair of parallel lines to find vertical vanishing point vp1
+%% -- pair of parallel lines to find vertical vanishing point vp1
 segment1 = drawline('Color','green');
 segment2 = drawline('Color','green');
 l1 = segToLine(segment1.Position);
@@ -145,7 +146,7 @@ l2 = segToLine(segment2.Position);
 l2 = l2 / l2(3);
 vp1 = cross(l1,l2);
 vp1 = vp1 / vp1(3);
-%% two pairs of parallel lines to find horizontal vanishing point vp2,vp3
+%% -- two pairs of parallel lines to find horizontal vanishing point vp2,vp3
 segment3 = drawline('Color','red');
 segment4 = drawline('Color','red');
 segment5 = drawline('Color','red');
@@ -162,32 +163,52 @@ vp2 = cross(l3,l4);
 vp2 = vp2 / vp2(3);
 vp3 = cross(l5,l6);
 vp3 = vp3 / vp3(3);
-%% image of the line at the infinity orthogonal to the vertical vanishing points
+%% -- image of the line at the infinity orthogonal to the vertical vanishing points
 % in order to obtain two constraints for the calibration process
 inf_line = cross(vp2, vp3);
 inf_line = inf_line / inf_line(3);
-%% affine rectification matrix
+%% -- affine rectification matrix
 H = [eye(2), zeros(2,1); inf_line(:)'];
-%% Image of Absolute Conic
+%% -- Image of Absolute Conic
 IAC = get_IAC(inf_line, vp1, vp2, vp3, H);
-%% intrinsic parameters
+%% -- intrinsic parameters
 alfa = sqrt(IAC(1,1));
 u0 = -IAC(1,3)/(alfa^2);
 v0 = -IAC(2,3);
 fy = sqrt(IAC(3,3) - (alfa^2)*(u0^2) - (v0^2));
 fx = fy / alfa;
-%% build K using the parametrization
+%% -- build K using the parametrization
 K = [fx 0 u0; 0 fy v0; 0 0 1];
 disp(K);
 %% CYLINDER AXIS ORIENTATION W.R.T. CAMERA REFERENCE
-P = [K [0 0 0]'];
-pih = P.'*h;
-theta1 = 90 + rad2deg(atan(pih(1)/pih(2)));
-theta2 = 90 + rad2deg(atan(pih(1)/pih(3)));
+
+% transform vanishing line l to epipolar line l'
+h_prime = inv(K)' * h;
+
+% find the intersection point P of l' with the image plane
+P = cross(h_prime, [1; 0; 0]);  % assuming x-axis as principal axis
+
+% calculate the direction vector from the camera center to P
+C = -inv(K) * h;  % camera center
+direction_vector = (P - C) / norm(P - C); % orientation of the cylinder axis
+
+% display result
+imshow(img);
+hold on;
+plot([vp(1), P(1)], [vp(2), P(2)], 'r-', 'LineWidth', 2); % vanishing line direction
+quiver3(C(1), C(2), C(3), direction_vector(1), direction_vector(2), direction_vector(3), 50, 'g', 'LineWidth', 2); % cylinder axis direction
+hold off;
+
+% orientation rotation matrix
+R = direction_vector;
+[U, ~, V] = svd(R);
+R = U * V';
+axis_orientation = R.';
+poseplot(axis_orientation); % 3D plot
 %% RATIO: (CIRCULAR CROSS SECTION) RADIUS / DISTANCE
 
 % compute cross section radius
-radiusC1 = pdist([p1(1),p1(2);O1(1),O1(2)], 'euclidean');
+radiusC1 = pdist([p1(1),p1(2);O1(1),O1(2)], 'euclidean'); % less distorted
 radiusC2 = pdist([p3(1),p3(2);O2(1),O2(2)], 'euclidean');
 
 % compute distance between cross sections (centers)

@@ -74,6 +74,7 @@
 \usepackage{siunitx}
 
 \usepackage{minted}
+\usepackage{cprotect}
 
 %-------------------------------------------------------------------------
 %	NEW COMMANDS DEFINED
@@ -170,7 +171,7 @@ The \textbf{Canny} method can be used to detect edges in the image.\\
 
 The algorithm comprises the following sequential steps:
 \begin{itemize}
-    \item[(i)] Apply Gaussian filter to smooth the image in order to remove the noise;
+    \item[(i)] Apply Gaussian filter to smooth the image in order to remove noise;
     \item[(ii)] Find the intensity gradients of the image;
     \item[(iii)] Apply gradient magnitude thresholding or lower bound cut-off suppression to get rid of spurious response to edge detection;
     \item[(iv)] Apply double threshold to determine potential edges;
@@ -182,7 +183,7 @@ MATLAB already includes -- in the Image Processing Toolbox -- an implementation 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{Images/PalazzoTe_edges.png}
-    \caption[Edge Detection.]{Edge Detection.}
+    \caption[Edge Detection -- Canny Method.]{Edge Detection -- Canny Method.}
     \label{fig:edges}
 \end{figure}
 
@@ -203,7 +204,7 @@ The function \verb|findCorners.m| implements this method and is used in the \ver
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.83\textwidth]{Images/PalazzoTe_corners.png}
-    \caption[Corner Detection.]{Corner Detection.}
+    \caption[Corner Detection -- Harris Method.]{Corner Detection -- Harris Method.}
     \label{fig:corners}
 \end{figure}
 
@@ -215,7 +216,7 @@ The algorithm comprises the following steps:
 \begin{itemize}
     \item[(i)] Edge detection: using the Canny edge detector;
     \item[(ii)] Mapping of edge points to the Hough space and storage in an accumulator;
-    \item[(iii)] Interpretation of the accumulator to yield lines of infinite length. The interpretation is done by thresholding and possibly other constraints;
+    \item[(iii)] Interpretation of the accumulator to yield lines of infinite length (interpretation is done by thresholding and possibly other constraints);
     \item[(iv)] Conversion of infinite lines to finite lines based on the hyper-parameters setting.
 \end{itemize}
 \bigskip
@@ -224,7 +225,7 @@ The function \verb|findLines.m| implements this method and is used in the \verb|
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.83\textwidth]{Images/PalazzoTe_lines.png}
-    \caption[Line Detection.]{Line Detection.}
+    \caption[Line Detection -- Hough Transform.]{Line Detection -- Hough Transform.}
     \label{fig:lines}
 \end{figure}
 
@@ -303,11 +304,11 @@ The vanishing point of a given line is the direction (i.e. point at infinity) of
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.73\textwidth]{Images/PalazzoTe_axis.png}
-    \caption[Cylinder Axis Image.]{Cylinder axis image (cyan).}
+    \caption[Cylinder Axis Image.]{Cylinder Axis Image (cyan).}
     \label{fig:axisImage}
 \end{figure}
 
-\subsubsection{Calibration Matrix, Cylinder Axis Orientation, Radius-Distance Ratio}\label{sec:toRatioRadiusDistance}
+\subsubsection{Calibration Matrix}\label{sec:toCalibrationMatrix}
 In this section, the calibration matrix $K$ -- containing the intrinsic parameters of the camera --  will be computed. In the assignment is stated that the skew factor is null, thus there are four unknowns. Therefore, to estimate the calibration matrix -- using the Image of the Absolute Conic (IAC) -- four constraints (i.e. equations) are necessary. The IAC is strongly related to the camera calibration matrix through the following \textit{Equation \ref{eq:iacCalib}}.
 
 \begin{equation}
@@ -338,7 +339,7 @@ Hence, the four constraints (three equations) are reported in the system defined
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.83\textwidth]{Images/PalazzoTe_IAC_constraints.png}
-    \caption[Calibration constraints.]{Calibration constraints.}
+    \caption[Calibration Constraints.]{Calibration Constraints.}
     \label{fig:calibConstraints}
 \end{figure}
 
@@ -361,7 +362,31 @@ Finally, one can compute the calibration matrix $K$ through Cholesky Decompositi
 \end{equation}
 \bigskip
 
-Using the estimated calibration matrix, the cylinder axis with respect to the camera reference is computed, and the ratio between the radius of the circular cross sections and their distance is determined using points and centres of the conics.
+\subsubsection{Cylinder Axis Orientation, Radius-Distance Ratio}\label{sec:toRadiusDistanceRatio}
+In this part, the (3D) orientation between the cylinder axis and the camera reference is determined using computed information such as the calibration matrix $K$, the vanishing line $h$, and the vanishing point of the cylinder axis $V$.\\
+
+The process involves transforming the vanishing line $h$ into its corresponding epipolar line $h'$ using the camera calibration matrix $K$, as stated in \textit{Equation \ref{eq:epipolarLine}}.
+
+\begin{equation}
+    h' = K^{-T}h
+    \label{eq:epipolarLine}
+\end{equation}
+\bigskip
+
+Subsequently, the direction vector from the camera center to a selected point on the epipolar line is calculated, representing the orientation of the cylinder axis in 3D space. The vanishing point $V$ is projected into 3D space, and the orientation of the cylinder axis is determined by the cross product of the direction vector and the 3D coordinates of the projected vanishing point. The resulting direction vector is then normalized to represent the unit vector along the axis.\\
+
+Optional visualizations, such as plotting the vanishing line and the direction vector on the image, provide additional insights into the cylinder axis orientation.\\
+
+Finally, the radius-distance ratio is computed using known parameters such as generic points on the conics and their centres. Specifically, the Euclidean distance between desired endpoints is determined using MATLAB \verb|pdist| function. The ratio -- considering the less distorted conic --  is approximately unitary.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.53\textwidth]{Images/axis_orientation.png}
+    \cprotect\caption[Cylinder Axis Orientation.]{Cylinder Axis Orientation (red) and Vanishing Line (green) -- plotted in 3D using \verb|poseplot|.}
+    \label{fig:axisImage}
+\end{figure}
+
+\pagebreak
 
 \subsection{Metric Rectification}
 \label{sec:shapeReconstruction}
@@ -372,7 +397,7 @@ Metric rectification will be accomplished using images of circles \cite{MetRecCi
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{Images/PalazzoTe_rec_conics.png}
-    \caption[Circles Images used for rectification.]{Circles Images used for rectification.}
+    \caption[Circles Images used for Rectification.]{Circles Images used for Rectification.}
     \label{fig:recConics}
 \end{figure}
 
@@ -387,8 +412,7 @@ Then, for every pair of conics the intersections are computed. In order to disam
     \end{bmatrix}
     \label{eq:hMatrix}
 \end{equation}
-
-\pagebreak
+\bigskip
 
 At this point, taken one of the three conics (e.g. $C_1$) its projective transformation in the rectified plane is obtained applying the rule stated in \textit{Equation \ref{eq:qMatrix}}.
 
@@ -431,7 +455,7 @@ To compute the affinity that rectifies the cylinder, the idea is to build the on
 \end{equation}
 \bigskip
 
-The final transformation $T$ is the composition between the homography that maps the image of the line at infinity to its canonical position and the rescaling homography, and is computed as stated in the following \textit{Equations \ref{eq:kMatrix}, \ref{eq:aMatrix}, \ref{eq:tMatrix}}.
+The final transformation $T$ is the composition between the homography that maps the image of the line at infinity to its canonical position and the rescaling homography, and is computed as stated in the following \textit{Equations \ref{eq:kMatrix}, \ref{eq:aMatrix}, \ref{eq:tMatrix}}. Eventually, the rectified cylinder surface unfolded onto a plane is shown in \textbf{Figure \ref{fig:rectified}}.
 
 \begin{equation}
     K = USU^T
@@ -451,14 +475,11 @@ The final transformation $T$ is the composition between the homography that maps
     T = AH
     \label{eq:tMatrix}
 \end{equation}
-\bigskip
-
-Finally, the rectified cylinder surface unfolded onto a plane is shown in \textbf{Figure \ref{fig:rectified}}.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{Images/PalazzoTe_rectified.png}
-    \caption[Rectified cylinder surface between two generatrix lines.]{Rectified cylinder surface between two generatrix lines.}
+    \includegraphics[width=0.83\textwidth]{Images/PalazzoTe_rectified.png}
+    \caption[Rectified Cylinder Surface between two Generatrix Lines.]{Rectified Cylinder Surface between two Generatrix Lines.}
     \label{fig:rectified}
 \end{figure}
 
