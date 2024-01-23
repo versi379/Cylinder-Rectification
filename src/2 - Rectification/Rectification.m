@@ -97,10 +97,10 @@ alpha = par_geo(5);
 %% ROTATION AND SCALING
 U = [cos(alpha), -sin(alpha); sin(alpha), cos(alpha)];
 S = diag([1, a/b]);
+%% COMPOSITION HOMOGRAPHY
 K = U*S*U';
 A = [K zeros(2,1); zeros(1,2), 1];
 T = A*H;
-%% COMPOSITION HOMOGRAPHY
 tform = projective2d(T');
 J = imwarp(img, tform);
 figure(2);
